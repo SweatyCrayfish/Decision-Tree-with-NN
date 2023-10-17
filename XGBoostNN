@@ -1,0 +1,60 @@
+import numpy as np
+import xgboost as xgb
+import tensorflow as tf
+
+# Generate synthetic data
+X = np.random.rand(1000, 1)
+y = 4 * X.squeeze() + 3 + np.random.randn(1000)
+
+# Initialize and train XGBoost model
+params = {'max_depth': 3, 'objective': 'reg:squarederror'}
+dtrain = xgb.DMatrix(X, label=y)
+bst = xgb.train(params, dtrain, num_boost_round=5)
+
+# Extract leaf indices
+leaf_indices = bst.predict(dtrain, pred_leaf=True)
+
+# Create and train neural networks for each leaf
+leaf_to_nn = {}
+for i, tree_leaf_indices in enumerate(leaf_indices.T):  # Iterate through each tree
+    for leaf in np.unique(tree_leaf_indices):
+        # Extract samples falling into this leaf in this tree
+        X_leaf = X[tree_leaf_indices == leaf]
+        y_leaf = y[tree_leaf_indices == leaf]
+
+        # Define a simple neural network model
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dense(10, activation='relu', input_shape=(1,)),
+            tf.keras.layers.Dense(1)
+        ])
+        model.compile(optimizer='adam', loss='mean_squared_error')
+
+        # Train the model
+        model.fit(X_leaf, y_leaf, epochs=10, verbose=0)
+
+        # Store the trained model
+        leaf_to_nn[(i, leaf)] = model
+
+# Function to make predictions
+def hybrid_predict(X):
+    dtest = xgb.DMatrix(X)
+    leaf_indices = bst.predict(dtest, pred_leaf=True)
+    predictions = np.zeros(X.shape[0])
+
+    for i, tree_leaf_indices in enumerate(leaf_indices.T):  # Iterate through each tree
+        for leaf in np.unique(tree_leaf_indices):
+            X_leaf = X[tree_leaf_indices == leaf]
+            nn = leaf_to_nn.get((i, leaf))
+            if nn:
+                predictions[tree_leaf_indices == leaf] += nn.predict(X_leaf).squeeze()
+
+    return predictions / leaf_indices.shape[1]  # Average over all trees
+
+# Test the model
+X_test = np.random.rand(200, 1)
+y_test = 4 * X_test.squeeze() + 3 + np.random.randn(200)
+y_pred = hybrid_predict(X_test)
+
+# Compute MSE for evaluation
+mse = np.mean((y_test - y_pred) ** 2)
+print(f"Mean Squared Error on test data: {mse}")
