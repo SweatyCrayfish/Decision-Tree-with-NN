@@ -6,19 +6,18 @@ import tensorflow as tf
 #X = np.random.rand(1000, 1)
 #y = 4 * X.squeeze() + 3 + np.random.randn(1000)
 
-# Initialize and train XGBoost model
+# Train XGBoost model
 params = {'max_depth': 3, 'objective': 'reg:squarederror'}
 dtrain = xgb.DMatrix(X, label=y)
 bst = xgb.train(params, dtrain, num_boost_round=5)
 
-# Extract leaf indices
+# Extract leave indices
 leaf_indices = bst.predict(dtrain, pred_leaf=True)
 
-# Create and train neural networks for each leaf
+# Create and train NN for each leave
 leaf_to_nn = {}
-for i, tree_leaf_indices in enumerate(leaf_indices.T):  # Iterate through each tree
+for i, tree_leaf_indices in enumerate(leaf_indices.T): 
     for leaf in np.unique(tree_leaf_indices):
-        # Extract samples falling into this leaf in this tree
         X_leaf = X[tree_leaf_indices == leaf]
         y_leaf = y[tree_leaf_indices == leaf]
         # Define a simple neural network model
@@ -27,7 +26,6 @@ for i, tree_leaf_indices in enumerate(leaf_indices.T):  # Iterate through each t
             tf.keras.layers.Dense(1)
         ])
         model.compile(optimizer='adam', loss='mean_squared_error')
-        # Train the model
         model.fit(X_leaf, y_leaf, epochs=10, verbose=0)
         # Store the trained model
         leaf_to_nn[(i, leaf)] = model
@@ -37,7 +35,7 @@ def hybrid_predict(X):
     dtest = xgb.DMatrix(X)
     leaf_indices = bst.predict(dtest, pred_leaf=True)
     predictions = np.zeros(X.shape[0])
-    for i, tree_leaf_indices in enumerate(leaf_indices.T):  # Iterate through each tree
+    for i, tree_leaf_indices in enumerate(leaf_indices.T): 
         for leaf in np.unique(tree_leaf_indices):
             X_leaf = X[tree_leaf_indices == leaf]
             nn = leaf_to_nn.get((i, leaf))
