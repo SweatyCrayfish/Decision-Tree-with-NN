@@ -1,17 +1,17 @@
-# Decision-Tree-with-NN
+# NN_XGBoost
 
-In a neural network boosting model based on XGBoost, you would expect that the base learners being boosted are neural networks. XGBoost would coordinate the training of these neural networks to minimize some loss function, similar to how it does for decision trees.
+In a neural network boosting model based on XGBoost, we would expect that the base learners being boosted are neural networks. XGBoost would coordinate the training of these neural networks to minimize some loss function, similar to how it does for decision trees.
 
-In contrast, your model retains XGBoost's use of decision trees as base learners but replaces the leaves (or terminal nodes) of those trees with neural networks. Each of these neural networks is responsible for a more nuanced prediction for the subset of the data that reaches that leaf.
+In contrast, this model retains XGBoost's use of decision trees as base learners but replaces the leaves (or terminal nodes) of those trees with neural networks. Each of these neural networks is responsible for a more nuanced prediction for the subset of the data that reaches that leaf.
 
 So, the key difference lies in the base learner:
 
 - In "A neural network boosting regression model based on XGBoost," the base learner is a neural network.
-- In your model, the base learner is still a decision tree, but the leaves of that tree are replaced by neural networks.
+- In our model, the base learner is still a decision tree, but the leaves of that tree are replaced by neural networks.
 
 The two approaches aim to integrate neural networks and XGBoost, but they do so in fundamentally different ways.
 
-# Hybrid Model: XGBoost with Neural Networks in Leaves
+# NN_XGBoost
 
 ## Problem Formulation
 
@@ -39,7 +39,7 @@ Each $\( f_k \)$ is a decision tree that maps an input $\( x \)$ to a leaf index
 
 ## Neural Networks in Leaves
 
-In your hybrid model, instead of having a constant value in the leaf, there is a neural network \( \mathcal{N}_{kl} \) specific to the \( k \)-th tree and \( l \)-th leaf. Therefore:
+In NN_XGBoost, instead of having a constant value in the leaf, there is a neural network \( \mathcal{N}_{kl} \) specific to the \( k \)-th tree and \( l \)-th leaf. Therefore:
 
 $$
 f_k(x) \rightarrow \mathcal{N}_{kl}(x)
@@ -73,4 +73,4 @@ subject to the architecture and parameters of each $\( \mathcal{N}_{kl} \)$.
 2. **Hyperparameter Tuning**: The architecture for each \( \mathcal{N}_{kl} \) must be chosen.
 3. **Model Interpretability**: With neural networks in the leaves, the interpretability that XGBoost offers will be affected.
 
-This mathematical formulation describes a hybrid model where XGBoost's decision trees have their leaves replaced by neural networks. Note that this is the first iteration.
+This mathematical formulation describes NN_XGBoost model where XGBoost's decision trees have their leaves replaced by neural networks. Note that this is the first iteration.
